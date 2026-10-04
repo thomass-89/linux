@@ -7,7 +7,7 @@ work=${DESKTOP_WORK:-"$source_dir/desktop-work"}
 output=${DESKTOP_OUTPUT:-"$source_dir/desktop-output"}
 base_name=AlmaLinux-9.8-x86_64-Live-GNOME.iso
 base_url=https://repo.almalinux.org/almalinux/9/live/x86_64
-iso_name=Hayavadan-Desktop-x86_64.iso
+iso_name=Experimental-Desktop-x86_64.iso
 mkdir -p "$work" "$output"
 work=$(realpath "$work")
 output=$(realpath "$output")
@@ -97,7 +97,7 @@ cat > "$rpm_top/SPECS/kernel-desktop.spec" <<EOF
 Name: kernel-desktop
 Version: $rpm_version
 Release: 1
-Summary: Upstream Linux kernel for Hayavadan Desktop
+Summary: Upstream Linux kernel for Experimental Desktop
 License: GPL-2.0-only
 URL: https://github.com/thomass-89/linux
 BuildArch: x86_64
@@ -152,7 +152,7 @@ ConditionPathExists=/sys/devices/virtual/dmi/id/product_name
 
 [Service]
 Type=simple
-ExecCondition=/usr/bin/grep -qxF "Hayavadan Desktop Build Test" /sys/devices/virtual/dmi/id/product_name
+ExecCondition=/usr/bin/grep -qxF "Experimental Desktop Build Test" /sys/devices/virtual/dmi/id/product_name
 ExecStart=/usr/local/libexec/desktop-smoke
 RuntimeMaxSec=600
 
@@ -162,19 +162,19 @@ EOF
 sudo cp "$work/desktop-smoke.service" "$root/etc/systemd/system/desktop-smoke.service"
 sudo chroot "$root" systemctl enable desktop-smoke.service
 printf '%s\n' "$krel" | sudo tee "$root/etc/desktop-kernel-release" >/dev/null
-sudo mkdir -p "$root/usr/share/doc/hayavadan-desktop"
-sudo cp desktop/README.md "$root/usr/share/doc/hayavadan-desktop/README.md"
+sudo mkdir -p "$root/usr/share/doc/experimental-desktop"
+sudo cp desktop/README.md "$root/usr/share/doc/experimental-desktop/README.md"
 python3 - "$root/usr/lib/os-release" "$work/os-release" <<'PY'
 import re, sys
 text = open(sys.argv[1], encoding='utf-8').read()
-text = re.sub(r'^NAME=.*$', 'NAME="Hayavadan Desktop"', text, flags=re.M)
-text = re.sub(r'^PRETTY_NAME=.*$', 'PRETTY_NAME="Hayavadan Desktop (AlmaLinux 9.8 base)"', text, flags=re.M)
+text = re.sub(r'^NAME=.*$', 'NAME="Experimental Desktop"', text, flags=re.M)
+text = re.sub(r'^PRETTY_NAME=.*$', 'PRETTY_NAME="Experimental Desktop (AlmaLinux 9.8 base)"', text, flags=re.M)
 open(sys.argv[2], 'w', encoding='utf-8').write(text)
 PY
 sudo cp "$work/os-release" "$root/usr/lib/os-release"
 cat > "$work/build-info.json" <<EOF
 {
-  "name": "Hayavadan Desktop",
+  "name": "Experimental Desktop",
   "architecture": "x86_64",
   "base": "$base_name",
   "base_url": "$base_url/$base_name",
@@ -188,14 +188,14 @@ cat > "$work/build-info.json" <<EOF
 }
 EOF
 cp "$work/build-info.json" "$output/build-info.json"
-sudo cp "$work/build-info.json" "$root/usr/share/doc/hayavadan-desktop/build-info.json"
+sudo cp "$work/build-info.json" "$root/usr/share/doc/experimental-desktop/build-info.json"
 sudo chroot "$root" depmod -a "$krel"
 sudo chroot "$root" dracut --force --no-hostonly --no-hostonly-cmdline \
     --add 'dmsquash-live' \
     --add-drivers 'virtio_pci virtio_blk virtio_net virtio_gpu' \
     "/boot/initramfs-$krel.img" "$krel"
 sudo chroot "$root" grubby --add-kernel="/boot/vmlinuz-$krel" \
-    --initrd="/boot/initramfs-$krel.img" --title="Hayavadan Desktop ($krel)" \
+    --initrd="/boot/initramfs-$krel.img" --title="Experimental Desktop ($krel)" \
     --copy-default --make-default
 selinux_policy=$(sudo find "$root/etc/selinux/targeted/policy" -maxdepth 1 \
     -name 'policy.*' -type f -printf '%f\n' | sort -V | tail -n 1)
@@ -207,7 +207,7 @@ fi
 sudo chroot "$root" setfiles -F -c "/etc/selinux/targeted/policy/$selinux_policy" \
     /etc/selinux/targeted/contexts/files/file_contexts /usr/local/libexec/desktop-smoke \
     /etc/systemd/system/desktop-smoke.service /etc/desktop-kernel-release \
-    /usr/share/doc/hayavadan-desktop /usr/lib/modules/"$krel" /boot /usr/lib/os-release
+    /usr/share/doc/experimental-desktop /usr/lib/modules/"$krel" /boot /usr/lib/os-release
 sudo chroot "$root" rpm -q kernel-desktop
 sudo cp "$root/boot/vmlinuz-$krel" "$work/iso/images/pxeboot/vmlinuz"
 sudo cp "$root/boot/initramfs-$krel.img" "$work/iso/images/pxeboot/initrd.img"

@@ -46,7 +46,7 @@ class Monitor:
 
 
 def test_boot(output, mode):
-    iso = output / 'Hayavadan-Desktop-x86_64.iso'
+    iso = output / 'Experimental-Desktop-x86_64.iso'
     if not iso.is_file():
         raise RuntimeError('The completed ISO is missing; inspect build.log first')
     serial = output / f'{mode}-serial.log'
@@ -63,7 +63,7 @@ def test_boot(output, mode):
             '-device', 'virtio-vga', '-device', 'qemu-xhci',
             '-device', 'usb-tablet',
             '-netdev', 'user,id=net0', '-device', 'virtio-net-pci,netdev=net0',
-            '-smbios', 'type=1,product=Hayavadan Desktop Build Test',
+            '-smbios', 'type=1,product=Experimental Desktop Build Test',
             '-display', 'none', '-serial', f'file:{serial}',
             '-qmp', f'unix:{qmp_path},server=on,wait=off', '-no-reboot',
         ]

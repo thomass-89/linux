@@ -1,4 +1,4 @@
-# Hayavadan Desktop
+# Experimental Desktop
 
 An experimental x86_64 live desktop built from this Linux fork and the official
 AlmaLinux 9.8 GNOME live image. It includes GNOME, Firefox, LibreOffice, GNOME
@@ -11,11 +11,11 @@ AlmaLinux kernel. The current branch uses an upstream release candidate.
 
 ## Download and boot
 
-The **Build Hayavadan Desktop** workflow publishes a prerelease only after the
+The **Build Experimental Desktop** workflow publishes a prerelease only after the
 finished ISO boots through its own bootloader in both BIOS and UEFI test VMs.
 Release assets contain the ISO in 1 GiB parts to stay below per-file size limits.
 
-1. Download every `Hayavadan-Desktop-x86_64.iso.part-*` file, `join-image.py`,
+1. Download every `Experimental-Desktop-x86_64.iso.part-*` file, `join-image.py`,
    and `ISO-SHA256SUMS` into the same folder.
 2. Run `python3 join-image.py` on Linux/macOS, or `py join-image.py` on Windows
    with Python 3 installed. The program joins the parts and verifies SHA256.
@@ -39,7 +39,7 @@ automatically tested. Drivers in `kernel.fragment` focus on desktop VMs and
 common x86_64 desktop hardware; support for a specific PC is not guaranteed.
 
 The smoke service activates only when a VM explicitly supplies the test DMI
-product name `Hayavadan Desktop Build Test`. It is inactive in normal use.
+product name `Experimental Desktop Build Test`. It is inactive in normal use.
 
 ## Rebuild
 

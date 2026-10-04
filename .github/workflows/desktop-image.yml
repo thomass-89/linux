@@ -1,4 +1,4 @@
-name: Build Hayavadan Desktop
+name: Build Experimental Desktop
 
 on:
   push:

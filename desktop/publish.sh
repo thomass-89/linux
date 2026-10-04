@@ -9,7 +9,7 @@ import json
 results = json.load(open('test-results.json', encoding='utf-8'))
 assert {r['firmware'] for r in results if r['passed']} == {'bios', 'uefi'}
 PY
-iso=Hayavadan-Desktop-x86_64.iso
+iso=Experimental-Desktop-x86_64.iso
 # Release assets avoid storing a multi-GB image in billed Actions artifacts.
 # Keep each downloadable part comfortably below GitHub's per-file limits.
 split -b 1024M -d -a 3 --numeric-suffixes=1 "$iso" "$iso.part-"
@@ -17,7 +17,7 @@ sha256sum "$iso".part-* ./*.rpm linux-source.tar.zst kernel.config \
     join-image.py > SHA256SUMS
 tag="desktop-${GITHUB_RUN_ID:?}-${GITHUB_RUN_ATTEMPT:?}"
 cat > release-notes.md <<EOF
-Hayavadan Desktop: AlmaLinux 9.8 GNOME with Linux $(cat kernel-release.txt), compiled from this fork.
+Experimental Desktop: AlmaLinux 9.8 GNOME with Linux $(cat kernel-release.txt), compiled from this fork.
 
 Both BIOS and UEFI VM boots passed: the custom kernel, enforcing SELinux, live user's GNOME desktop, installed desktop applications, DHCP networking, and file writes were checked. Screenshots and test-results.json are attached.
 
@@ -33,7 +33,7 @@ declare -a assets=("$iso".part-* ISO-SHA256SUMS SHA256SUMS join-image.py \
     README.md linux-source.tar.zst kernel.config ./*.rpm build-info.json \
     test-results.json bios-desktop.png uefi-desktop.png bios-serial.log uefi-serial.log)
 gh release create "$tag" "${assets[@]}" --repo "$GITHUB_REPOSITORY" \
-    --target "$GITHUB_SHA" --title "Hayavadan Desktop experimental build" \
+    --target "$GITHUB_SHA" --title "Experimental Desktop experimental build" \
     --prerelease --notes-file release-notes.md
 printf '### Tested desktop image\n\n[Download the release](%s/%s/releases/tag/%s)\n' \
     "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$tag" >> "$GITHUB_STEP_SUMMARY"

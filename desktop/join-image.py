@@ -6,7 +6,7 @@ from pathlib import Path
 import shutil
 
 folder = Path(__file__).resolve().parent
-iso = folder / 'Hayavadan-Desktop-x86_64.iso'
+iso = folder / 'Experimental-Desktop-x86_64.iso'
 parts = sorted(folder.glob(iso.name + '.part-*'))
 expected = (folder / 'ISO-SHA256SUMS').read_text().split()[0]
 if not parts:

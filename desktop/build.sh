@@ -141,8 +141,9 @@ sudo rm "$root/tmp/kernel-desktop.rpm"
 echo "Integrating the custom kernel into the desktop"
 for path in /dev /proc /sys; do bind_mount "$path"; done
 sudo mkdir -p "$root/run/desktop-build"
-sudo cp desktop/guest-smoke.sh "$root/usr/local/libexec-desktop-smoke"
-sudo chmod 755 "$root/usr/local/libexec-desktop-smoke"
+sudo mkdir -p "$root/usr/local/libexec"
+sudo cp desktop/guest-smoke.sh "$root/usr/local/libexec/desktop-smoke"
+sudo chmod 755 "$root/usr/local/libexec/desktop-smoke"
 cat > "$work/desktop-smoke.service" <<'EOF'
 [Unit]
 Description=Desktop build verification in the dedicated test VM
@@ -152,7 +153,7 @@ ConditionPathExists=/sys/devices/virtual/dmi/id/product_name
 [Service]
 Type=oneshot
 ExecCondition=/usr/bin/grep -qxF "Hayavadan Desktop Build Test" /sys/devices/virtual/dmi/id/product_name
-ExecStart=/usr/local/libexec-desktop-smoke
+ExecStart=/usr/local/libexec/desktop-smoke
 TimeoutStartSec=600
 
 [Install]
@@ -196,7 +197,7 @@ sudo chroot "$root" dracut --force --no-hostonly --no-hostonly-cmdline \
 sudo chroot "$root" grubby --add-kernel="/boot/vmlinuz-$krel" \
     --initrd="/boot/initramfs-$krel.img" --title="Hayavadan Desktop ($krel)" \
     --copy-default --make-default
-sudo chroot "$root" restorecon -RF /usr/local/libexec-desktop-smoke \
+sudo chroot "$root" restorecon -RF /usr/local/libexec/desktop-smoke \
     /etc/systemd/system/desktop-smoke.service /etc/desktop-kernel-release \
     /usr/share/doc/hayavadan-desktop /usr/lib/modules/"$krel" /boot /usr/lib/os-release
 sudo chroot "$root" rpm -q kernel-desktop

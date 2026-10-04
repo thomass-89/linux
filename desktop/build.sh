@@ -197,7 +197,7 @@ sudo chroot "$root" dracut --force --no-hostonly --no-hostonly-cmdline \
     --add-drivers 'virtio_pci virtio_blk virtio_net virtio_gpu' \
     "/boot/initramfs-$krel.img" "$krel"
 # This live ISO boots from local media and must not run iSCSI root hooks.
-sudo chroot "$root" lsinitrd -m "/boot/initramfs-$krel.img" > "$output/initramfs-modules.log"
+sudo chroot "$root" lsinitrd -m "/boot/initramfs-$krel.img" | tee "$output/initramfs-modules.log"
 if grep -Eq '^[[:space:]]*iscsi[[:space:]]*$' "$output/initramfs-modules.log"; then
     echo 'Unexpected iSCSI module in the live initramfs' >&2
     exit 1

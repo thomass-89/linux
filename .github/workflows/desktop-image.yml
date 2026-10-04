@@ -1,0 +1,75 @@
+name: Build Hayavadan Desktop
+
+on:
+  push:
+    branches: [my-experiment]
+    paths:
+      - 'desktop/**'
+      - '.github/workflows/desktop-image.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  desktop:
+    if: github.repository == 'thomass-89/linux'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      DESKTOP_WORK: /mnt/desktop-build
+      DESKTOP_OUTPUT: ${{ github.workspace }}/desktop-output
+    steps:
+      - name: Check out the kernel fork
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Prepare the standard public runner
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential bc bison flex libssl-dev libelf-dev dwarves \
+            cpio rsync kmod rpm squashfs-tools xorriso isomd5sum mtools dosfstools \
+            qemu-system-x86 ovmf python3-pil shellcheck zstd
+          sudo mkdir -p "$DESKTOP_WORK"
+          sudo chown "$USER:$USER" "$DESKTOP_WORK"
+          mkdir -p "$DESKTOP_OUTPUT"
+          df -h "$DESKTOP_WORK"
+
+      - name: Check the build scripts
+        run: |
+          bash -n desktop/build.sh desktop/guest-smoke.sh desktop/publish.sh
+          shellcheck desktop/build.sh desktop/guest-smoke.sh desktop/publish.sh
+          python3 -m py_compile desktop/test-boot.py desktop/join-image.py
+
+      - name: Compile the fork and assemble the live desktop
+        run: bash desktop/build.sh 2>&1 | tee "$DESKTOP_OUTPUT/build.log"
+
+      - name: Boot the finished ISO with BIOS and UEFI
+        run: python3 desktop/test-boot.py "$DESKTOP_OUTPUT" 2>&1 | tee "$DESKTOP_OUTPUT/test.log"
+
+      - name: Publish the tested image and matching source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash desktop/publish.sh
+
+      - name: Keep small boot diagnostics for one day
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: desktop-boot-diagnostics
+          path: |
+            desktop-output/*.log
+            desktop-output/*.png
+            desktop-output/*.json
+            desktop-output/kernel.config
+          retention-days: 1
+          if-no-files-found: ignore
+          compression-level: 9

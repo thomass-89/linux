@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-2.0-only
 set -euo pipefail
 exec > >(tee /run/desktop-smoke.log /dev/ttyS0) 2>&1
+echo DESKTOP_SMOKE_STARTED
 trap 'status=$?; if ((status != 0)); then echo DESKTOP_SMOKE_FAILED; systemctl --no-pager --failed; journalctl -b -p err --no-pager -n 40; fi' EXIT
 expected=$(cat /etc/desktop-kernel-release)
 test "$(uname -r)" = "$expected"

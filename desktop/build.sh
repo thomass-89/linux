@@ -65,7 +65,8 @@ bash scripts/kconfig/merge_config.sh -m -O "$kernel_build" \
 make O="$kernel_build" LOCALVERSION= olddefconfig
 for symbol in CONFIG_EFI_STUB CONFIG_DRM_VIRTIO_GPU CONFIG_EXT4_FS \
               CONFIG_SQUASHFS CONFIG_BLK_DEV_DM CONFIG_DM_SNAPSHOT \
-              CONFIG_SECURITY_SELINUX CONFIG_VIRTIO_NET; do
+              CONFIG_SECURITY_SELINUX CONFIG_VIRTIO_NET CONFIG_DRM_FBDEV_EMULATION \
+              CONFIG_SERIAL_8250_CONSOLE CONFIG_CMDLINE_BOOL; do
     if ! grep -qx "$symbol=y" "$kernel_build/.config"; then
         echo "Required kernel feature is missing: $symbol" >&2
         exit 1

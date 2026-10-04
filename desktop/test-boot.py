@@ -52,6 +52,7 @@ def test_boot(output, mode):
     serial = output / f'{mode}-serial.log'
     emulator_log = output / f'{mode}-qemu.log'
     kvm = os.access('/dev/kvm', os.R_OK | os.W_OK)
+    print(f'{mode}: starting ISO boot with {"KVM" if kvm else "TCG"}', flush=True)
     with tempfile.TemporaryDirectory(prefix='desktop-qemu-') as temp:
         temp = Path(temp)
         qmp_path = temp / 'qmp.sock'
@@ -108,6 +109,9 @@ def test_boot(output, mode):
                     with Image.open(ppm) as picture:
                         picture.save(output / f'{mode}-desktop.png')
                 if not passed:
+                    print(f'{mode}: final serial output:\n' +
+                          (serial.read_text(errors='replace')[-16000:] if serial.exists()
+                           else '(serial log missing)'), flush=True)
                     raise RuntimeError(f'{mode}: ISO desktop boot failed; see {serial}')
                 result = {'firmware': mode, 'passed': True,
                           'accelerator': 'kvm' if kvm else 'tcg',
@@ -130,5 +134,13 @@ def test_boot(output, mode):
 
 if __name__ == '__main__':
     output = Path(sys.argv[1]).resolve()
-    results = [test_boot(output, mode) for mode in ('bios', 'uefi')]
+    results = []
+    for mode in ('bios', 'uefi'):
+        try:
+            results.append(test_boot(output, mode))
+        except Exception as error:
+            print(str(error), file=sys.stderr, flush=True)
+            results.append({'firmware': mode, 'passed': False, 'error': str(error)})
     (output / 'test-results.json').write_text(json.dumps(results, indent=2) + '\n')
+    if not all(result['passed'] for result in results):
+        sys.exit(1)

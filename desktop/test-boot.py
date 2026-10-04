@@ -18,7 +18,11 @@ class Monitor:
     def __init__(self, path):
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.sock.settimeout(15)
-        self.sock.connect(str(path))
+        try:
+            self.sock.connect(str(path))
+        except OSError:
+            self.sock.close()
+            raise
         self.file = self.sock.makefile('rwb')
         json.loads(self.file.readline())
         self.execute('qmp_capabilities')
@@ -43,6 +47,8 @@ class Monitor:
 
 def test_boot(output, mode):
     iso = output / 'Hayavadan-Desktop-x86_64.iso'
+    if not iso.is_file():
+        raise RuntimeError('The completed ISO is missing; inspect build.log first')
     serial = output / f'{mode}-serial.log'
     emulator_log = output / f'{mode}-qemu.log'
     kvm = os.access('/dev/kvm', os.R_OK | os.W_OK)
@@ -75,11 +81,16 @@ def test_boot(output, mode):
         with emulator_log.open('wb') as log:
             process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT)
             try:
-                while not qmp_path.exists():
+                while monitor is None:
                     if process.poll() is not None or time.monotonic() - start > 30:
                         raise RuntimeError(f'{mode}: QEMU did not start; see {emulator_log}')
-                    time.sleep(0.5)
-                monitor = Monitor(qmp_path)
+                    if qmp_path.exists():
+                        try:
+                            monitor = Monitor(qmp_path)
+                        except (FileNotFoundError, ConnectionRefusedError):
+                            pass
+                    if monitor is None:
+                        time.sleep(0.5)
                 passed = False
                 while time.monotonic() - start < 1200:
                     text = serial.read_text(errors='replace') if serial.exists() else ''

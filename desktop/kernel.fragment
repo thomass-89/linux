@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0-only
 # x86_64 desktop/VM additions to the upstream x86_64_defconfig.
-CONFIG_LOCALVERSION="-hayavadan"
+CONFIG_LOCALVERSION=".hayavadan"
 # CONFIG_LOCALVERSION_AUTO is not set
 # CONFIG_DEBUG_INFO is not set
 # CONFIG_DEBUG_INFO_BTF is not set

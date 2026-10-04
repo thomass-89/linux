@@ -59,10 +59,10 @@ df -h "$root"
 echo "Compiling the kernel from $(git rev-parse HEAD)"
 kernel_build="$work/kernel"
 mkdir -p "$kernel_build"
-make O="$kernel_build" x86_64_defconfig
+make O="$kernel_build" LOCALVERSION= x86_64_defconfig
 bash scripts/kconfig/merge_config.sh -m -O "$kernel_build" \
     "$kernel_build/.config" desktop/kernel.fragment
-make O="$kernel_build" olddefconfig
+make O="$kernel_build" LOCALVERSION= olddefconfig
 for symbol in CONFIG_EFI_STUB CONFIG_DRM_VIRTIO_GPU CONFIG_EXT4_FS \
               CONFIG_SQUASHFS CONFIG_BLK_DEV_DM CONFIG_DM_SNAPSHOT \
               CONFIG_SECURITY_SELINUX CONFIG_VIRTIO_NET; do
@@ -71,15 +71,15 @@ for symbol in CONFIG_EFI_STUB CONFIG_DRM_VIRTIO_GPU CONFIG_EXT4_FS \
         exit 1
     fi
 done
-make O="$kernel_build" -j"$(nproc)" bzImage modules
-krel=$(make -s O="$kernel_build" kernelrelease)
+make O="$kernel_build" LOCALVERSION= -j"$(nproc)" bzImage modules
+krel=$(make -s O="$kernel_build" LOCALVERSION= kernelrelease)
 printf '%s\n' "$krel" > "$output/kernel-release.txt"
 cp "$kernel_build/.config" "$output/kernel.config"
 
 echo "Packaging kernel $krel so RPM and the installer can track it"
 payload="$work/payload"
 mkdir -p "$payload/boot"
-make O="$kernel_build" INSTALL_MOD_PATH="$payload" INSTALL_MOD_STRIP=1 modules_install
+make O="$kernel_build" LOCALVERSION= INSTALL_MOD_PATH="$payload" INSTALL_MOD_STRIP=1 modules_install
 # AlmaLinux uses a merged /usr tree; preserve its /lib symlink.
 mkdir -p "$payload/usr/lib"
 mv "$payload/lib/modules" "$payload/usr/lib/modules"

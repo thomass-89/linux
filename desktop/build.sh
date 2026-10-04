@@ -197,7 +197,15 @@ sudo chroot "$root" dracut --force --no-hostonly --no-hostonly-cmdline \
 sudo chroot "$root" grubby --add-kernel="/boot/vmlinuz-$krel" \
     --initrd="/boot/initramfs-$krel.img" --title="Hayavadan Desktop ($krel)" \
     --copy-default --make-default
-sudo chroot "$root" restorecon -RF /usr/local/libexec/desktop-smoke \
+selinux_policy=$(sudo find "$root/etc/selinux/targeted/policy" -maxdepth 1 \
+    -name 'policy.*' -type f -printf '%f\n' | sort -V | tail -n 1)
+if [[ -z "$selinux_policy" ]]; then
+    echo "The base image's compiled SELinux policy is missing" >&2
+    exit 1
+fi
+# setfiles can label an offline filesystem without an active host SELinux policy.
+sudo chroot "$root" setfiles -F -c "/etc/selinux/targeted/policy/$selinux_policy" \
+    /etc/selinux/targeted/contexts/files/file_contexts /usr/local/libexec/desktop-smoke \
     /etc/systemd/system/desktop-smoke.service /etc/desktop-kernel-release \
     /usr/share/doc/hayavadan-desktop /usr/lib/modules/"$krel" /boot /usr/lib/os-release
 sudo chroot "$root" rpm -q kernel-desktop

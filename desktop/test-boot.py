@@ -95,7 +95,10 @@ def test_boot(output, mode):
                 passed = False
                 while time.monotonic() - start < 1200:
                     text = serial.read_text(errors='replace') if serial.exists() else ''
-                    if 'DESKTOP_SMOKE_FAILED' in text:
+                    if any(marker in text for marker in (
+                        'DESKTOP_SMOKE_FAILED', 'dracut: FATAL:',
+                        'Kernel panic - not syncing:', 'reboot: System halted',
+                    )):
                         break
                     if 'DESKTOP_SMOKE_OK' in text:
                         passed = True

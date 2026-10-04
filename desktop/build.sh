@@ -147,14 +147,14 @@ sudo chmod 755 "$root/usr/local/libexec/desktop-smoke"
 cat > "$work/desktop-smoke.service" <<'EOF'
 [Unit]
 Description=Desktop build verification in the dedicated test VM
-After=graphical.target NetworkManager.service
+After=display-manager.service NetworkManager.service
 ConditionPathExists=/sys/devices/virtual/dmi/id/product_name
 
 [Service]
-Type=oneshot
+Type=simple
 ExecCondition=/usr/bin/grep -qxF "Hayavadan Desktop Build Test" /sys/devices/virtual/dmi/id/product_name
 ExecStart=/usr/local/libexec/desktop-smoke
-TimeoutStartSec=600
+RuntimeMaxSec=600
 
 [Install]
 WantedBy=graphical.target

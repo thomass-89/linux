@@ -1,0 +1,51 @@
+name: Verify desktop disk installation
+on:
+  push:
+    branches: [my-experiment]
+    paths:
+      - 'install-tests/**'
+      - '.github/workflows/desktop-install.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+concurrency:
+  group: desktop-install-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  installation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Prepare test tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-system-x86 qemu-utils ovmf xorriso cpio python3-pil
+          mkdir -p install-output
+          bash -n install-tests/start-install.sh install-tests/installed-check.sh
+          python3 -m py_compile install-tests/run.py
+      - name: Download and verify the published image
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download desktop-37202781041-1 --repo thomass-89/linux --dir install-output \
+            --pattern 'Experimental-Desktop-x86_64.iso.part-*' --pattern ISO-SHA256SUMS --pattern join-image.py
+          python3 install-output/join-image.py
+      - name: Install and boot the virtual disks under BIOS and UEFI
+        run: python3 install-tests/run.py install-output 2>&1 | tee install-output/installation.log
+      - name: Retain installation evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: desktop-installation-evidence
+          path: |
+            install-output/*.log
+            install-output/*.json
+            install-output/*.png
+          retention-days: 3
+          if-no-files-found: ignore
